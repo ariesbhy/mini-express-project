@@ -1,51 +1,67 @@
-const getAllBooks = (req, res) => {
-  return res.status(200).json({ data: books });
-};
+const books = require("../../data");
+const BookSchema = require("../../models/BookSchema");
 
-const getOneBook = (req, res) => {
-  const { id } = req.params;
-  const book = books.find((book) => {
-    if (book.id == id) return true;
-  });
-  if (!book) {
-    return res.status(404).json({ error: "Book Not Found" });
-  } else {
-    return res.status(200).json({ data: book });
+const getAllBooks = async (req, res) => {
+  try {
+    const books = await BookSchema.find();
+    return res.status(200).json({ data: books });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
   }
 };
 
-const createBook = (req, res) => {
-  let lenght = books.lenght;
-  let newId = books[lenght - 1].id + 1;
-  const newBook = {
-    id: newId,
-    bookTitle: req.body.bookTitle,
-    author: req.body.author,
-    price: req.body.price,
-  };
-  books.push(newBook);
-  res.status(201).json({ message: "Added book", data: books });
+const getOneBook = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const bookFound = await BookSchema.findById(id);
+    if (!bookFound) {
+      return res.status(404).json({ error: "Book Not Found" });
+    } else {
+      return res.status(200).json({ data: bookFound });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
+  }
+};
+
+const createBook = async (req, res) => {
+  try {
+    const bookInfo = req.body;
+    const newBook = await BookSchema.create(bookInfo);
+    return res.status(201).json({ data: newBook });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
+  }
 };
 
 const deleteBook = (req, res) => {
-  const { id } = req.params;
-  const updatedBooks = books.filter((book) => {
-    if (book.id != id) {
-      return true;
-    }
-  });
-  res.status(200).json({ data: updatedBooks });
+  try {
+    const { id } = req.params;
+    const deletedBook = await BookSchema.findByIdAndDelete(id);
+    console.log(deletedBook)
+    return res.status(200).json({ data: deletedBook });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
+  };
 };
 
 const updateBook = (req, res) => {
-  const { id } = req.params;
-  const bookFound = books.find((book) => {
-    if (book.id == id) {
-      return true;
+  try {
+    const {id} = req.params
+    const updatedBook = await BookSchema.findByIdAndUpdate(id , req.body);
+    if (!updatedBook) {
+        return res.status(200).json({error: "Book Doesn't Exist"})
     }
-  });
-  bookFound.title = req.body.title;
-  return res.json({ data: bookFound });
+   
+    return res.status(200).json({data: updatedBook})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: error });
+  }
 };
 module.exports = {
   getAllBooks,
